@@ -1,0 +1,25 @@
+flowchart LR
+  user([User / Browser]) -->|HTTP :80| eip[Elastic IP]
+
+  subgraph GH[GitHub]
+    repo[Repo: main] --> actions[GitHub Actions<br/>checks, build, deploy]
+  end
+
+  actions -->|OIDC, no stored keys| iam[IAM role<br/>github-actions-vegah]
+  iam -->|push images :sha| ecr[(Amazon ECR<br/>frontend, backend, worker)]
+  iam -->|SSM SendCommand| ssm[AWS Systems Manager]
+
+  subgraph AWS[AWS ap-south-1, default VPC]
+    eip --> nginx
+    subgraph EC2[EC2 t3.micro: Docker Compose]
+      nginx[nginx :80] -->|/| fe[Next.js frontend :3000]
+      nginx -->|/api| be[NestJS backend :3001]
+      be -->|enqueue job| redis[(Redis + volume)]
+      redis -->|consume job| wk[BullMQ worker :3002]
+    end
+    be -->|SQL, SSL| rds[(RDS PostgreSQL 16)]
+    wk -->|update status| rds
+    ssm -->|runs deploy.sh| EC2
+    ecr -.->|docker pull| EC2
+    ps[SSM Parameter Store<br/>db password, db host] -.->|read at deploy| EC2
+  end
