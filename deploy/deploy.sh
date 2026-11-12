@@ -22,7 +22,7 @@ deploy_tag() {
 
   aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin "$ECR_REGISTRY"
   docker compose -f docker-compose.prod.yml pull
-  docker compose -f docker-compose.prod.yml up -d --remove-orphans
+  docker compose -f docker-compose.prod.yml up -d --remove-orphans || echo "compose up reported a failure, health check decides"
 }
 
 health() {

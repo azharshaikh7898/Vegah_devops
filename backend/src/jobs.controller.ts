@@ -6,7 +6,7 @@ export class JobsController {
   constructor(private readonly jobs: JobsService) {}
 
   @Get('health')
-  async health() { throw new Error('simulated failure'); }
+  async health() { await this.jobs.ping(); return { status: 'ok' }; }
 
   @Post('jobs')
   create(@Body() body: { payload: string }) { return this.jobs.create(body.payload); }
