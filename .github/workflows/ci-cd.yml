@@ -120,7 +120,4 @@ jobs:
           [ "$STATUS" = "Success" ]
 
       - name: Public smoke test
-        run: |
-          IP=$(aws ec2 describe-instances --instance-ids "${{ vars.EC2_INSTANCE_ID }}" \
-            --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
-          curl -fsS --retry 5 --retry-delay 5 "http://$IP/api/health"
+        run: curl -fsS --retry 5 --retry-delay 5 "${{ vars.APP_URL }}/api/health"
